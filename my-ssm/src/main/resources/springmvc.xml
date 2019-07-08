@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans.xsd
+http://www.springframework.org/schema/context
+http://www.springframework.org/schema/context/spring-context.xsd
+ http://www.springframework.org/schema/mvc
+ http://www.springframework.org/schema/mvc/spring-mvc.xsd"
+       xmlns="http://www.springframework.org/schema/beans">
+
+    <!--扫描web层注解-->
+    <context:component-scan base-package="com.mytest.controller"/>
+
+    <!--加入springmvc自带的注解 比如用到时间类型的数据参数可以指定外部时间类型转换成java.util.date类型-->
+    <mvc:annotation-driven conversion-service="formattingConversionService">
+        <!--配置 fastjson 自动转换器-->
+        <mvc:message-converters>
+            <bean id="fastJsonHttpMessageConverter"
+                  class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application_json/json;charset=UTF-8</value>
+                    </list>
+                </property>
+                <property name="fastJsonConfig">
+                    <bean class="com.alibaba.fastjson.support.config.FastJsonConfig">
+                        <property name="dateFormat" value="yyyy-MM-dd"/>
+                    </bean>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!--使用默认的servlet处理器释放静态资源-->
+    <mvc:default-servlet-handler/>
+
+    <!--自定义时间转换器-->
+    <bean id="formattingConversionService"
+          class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <bean class="com.mytest.util.StringDateFormatConverter">
+                    <constructor-arg>
+                        <array>
+                            <value>yyyy-MM-dd</value>
+                            <value>yyyy_MM_dd</value>
+                            <value>yyyy年MM月dd日</value>
+                            <value>yyyyMMdd</value>
+                            <value>dd-MM-yyyy</value>
+                        </array>
+                    </constructor-arg>
+                </bean>
+            </set>
+        </property>
+    </bean>
+
+    <!--    自定义拦截器-->
+    <!--    <mvc:interceptors>-->
+    <!--        <mvc:interceptor>-->
+    <!--            &lt;!&ndash;拦截范围 所有请求&ndash;&gt;-->
+    <!--            <mvc:mapping path="/**"/>-->
+    <!--            &lt;!&ndash;放过登录请求&ndash;&gt;-->
+    <!--            <mvc:exclude-mapping path="/login"/>-->
+    <!--            &lt;!&ndash;静态资源&ndash;&gt;-->
+    <!--            <mvc:exclude-mapping path="/css/**"/>-->
+    <!--            <mvc:exclude-mapping path="/img/**"/>-->
+    <!--            <mvc:exclude-mapping path="/js/**"/>-->
+    <!--            <mvc:exclude-mapping path="/login/CRMlogin_files/**"/>-->
+    <!--            <mvc:exclude-mapping path="/login/images/**"/>-->
+    <!--            <mvc:exclude-mapping path="/login/gt.js"/>-->
+    <!--            &lt;!&ndash;加载自定义拦截器&ndash;&gt;-->
+    <!--            <bean class="com.mytest.util.AuthorizationInterceptor"/>-->
+    <!--        </mvc:interceptor>-->
+    <!--    </mvc:interceptors>-->
+    <!--    视图解析器-->
+    <!--    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">-->
+    <!--        <property name="prefix" value="/"/>-->
+    <!--        <property name="suffix" value=".jsp"/>-->
+    <!--    </bean>-->
+
+
+    <!-- 使用thymeleaf解析 -->
+    <bean id="templateResolver" class="org.thymeleaf.spring4.templateresolver.SpringResourceTemplateResolver">
+        <property name="prefix" value="/WEB-INF/templates/"/>
+        <property name="suffix" value=".htm"/>
+        <property name="templateMode" value="HTML5"/>
+        <property name="cacheable" value="false"/><!-- 缓存-->
+        <property name="characterEncoding" value="UTF-8"/><!--解决中文乱码-->
+    </bean>
+    <bean id="templateEngine"
+          class="org.thymeleaf.spring4.SpringTemplateEngine">
+        <property name="templateResolver" ref="templateResolver"/>
+    </bean>
+    <bean class="org.thymeleaf.spring4.view.ThymeleafViewResolver">
+        <property name="templateEngine" ref="templateEngine"/>
+        <property name="order" value="2"/>
+        <property name="viewNames" value="*_th"/>
+        <property name="characterEncoding" value="UTF-8"/><!--解决中文乱码-->
+    </bean>
+</beans>
